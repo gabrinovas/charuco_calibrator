@@ -1,0 +1,37 @@
+charuco_calibrator:
+  ros__parameters:
+    # ===== PARÁMETROS DEL TABLERO CHARUCO =====
+    # Según PDF: ChArUco__A4_210x297mm__10x14_Board__70_Markers__
+    # 20mm_SquareSize__15mm_MarkerSize__DictionaryNumber_3_4X4__4_BitsMarkers.pdf
+    
+    # Dimensiones del tablero
+    charuco_rows: 14                          # Número de filas (14 en el PDF)
+    charuco_cols: 10                          # Número de columnas (10 en el PDF)
+    
+    # Tamaños en metros
+    square_length: 0.020                       # 20 mm
+    marker_length: 0.015                       # 15 mm
+    
+    # Diccionario ArUco
+    # Dictionary Number 3 = DICT_4X4_100
+    dictionary: "DICT_4X4_100"
+    
+    # ===== PARÁMETROS DE CALIBRACIÓN =====
+    # Archivos de salida
+    output_file: "calibration.yaml"            # Resultado de calibración intrínseca
+    robot_poses_file: "robot_poses.txt"        # Poses del robot (para ojo-mano)
+    hand_eye_output: "hand_eye_calibration.yaml" # Resultado de calibración ojo-mano
+    
+    # ===== PARÁMETROS DE LA CÁMARA =====
+    camera_model: "realsense_d435i"             # Modelo de cámara
+    image_width: 1920                           # Resolución recomendada
+    image_height: 1080
+    
+    # ===== PARÁMETROS DE DETECCIÓN =====
+    min_markers: 4                              # Mínimo de marcadores para considerar
+    min_corners: 10                             # Mínimo de esquinas Charuco
+    min_valid_images: 5                          # Mínimo de imágenes válidas para calibrar
+    
+    # ===== PARÁMETROS DE VISUALIZACIÓN =====
+    show_preview: true                          # Mostrar preview durante captura
+    preview_time: 500                            # Tiempo de preview en ms
