@@ -28,6 +28,8 @@ setup(
             'charuco_intrinsic = charuco_calibrator.charuco_intrinsic:main',
             'charuco_hand_eye = charuco_calibrator.charuco_hand_eye:main',
             'capture_for_calibration = charuco_calibrator.capture_for_calibration:main',
+            'save_robot_pose = charuco_calibrator.save_robot_pose:main',
+            'generate_calibration_pairs = charuco_calibrator.generate_calibration_pairs:main',
         ],
     },
 )

@@ -2,15 +2,27 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>charuco_calibrator</name>
-  <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <version>0.0.1</version>
+  <description>Charuco detector for camera calibration and hand-eye calibration</description>
   <maintainer email="gabriel.novas@aimen.es">Gabriel Novas</maintainer>
-  <license>TODO: License declaration</license>
+  <license>MIT</license>
 
   <depend>rclpy</depend>
   <depend>sensor_msgs</depend>
   <depend>cv_bridge</depend>
   <depend>geometry_msgs</depend>
+  <depend>visualization_msgs</depend>
+  <depend>tf2_ros</depend>
+  <depend>tf_transformations</depend>
+  <depend>std_srvs</depend>
+  <depend>yaml_cpp_vendor</depend>
+  
+  <!-- Dependencias para VISP -->
+  <depend>visp_hand2eye_calibration</depend>
+  
+  <!-- Dependencias para FlexBE -->
+  <depend>flexbe_core</depend>
+  <depend>flexbe_msgs</depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

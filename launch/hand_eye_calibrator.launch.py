@@ -1,60 +1,47 @@
 #!/usr/bin/env python3
 from launch import LaunchDescription
 from launch_ros.actions import Node
-from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration
-import os
-from ament_index_python.packages import get_package_share_directory
+from launch.actions import DeclareLaunchArgument, ExecuteProcess
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch_ros.substitutions import FindPackageShare
 
 def generate_launch_description():
-    # Ruta al archivo de configuración por defecto
-    default_config_file = os.path.join(
-        get_package_share_directory('charuco_calibrator'),
-        'config',
-        'charuco_params.yaml'
-    )
-    
     return LaunchDescription([
-        # Argumentos para calibración ojo-mano
+        # Argumentos
         DeclareLaunchArgument(
-            'images_folder',
-            default_value='',
-            description='Carpeta con las imágenes para calibración ojo-mano'
+            'pictures_folder',
+            default_value='/home/drims/drims_ws/calibrations/extrinsic_calibration/pictures',
+            description='Carpeta con imágenes'
         ),
         DeclareLaunchArgument(
-            'config_file',
-            default_value=default_config_file,
-            description='Archivo de configuración YAML con parámetros del Charuco'
+            'robot_poses_folder',
+            default_value='/home/drims/drims_ws/calibrations/extrinsic_calibration/robot_poses',
+            description='Carpeta con poses del robot'
         ),
         DeclareLaunchArgument(
-            'camera_intrinsics_file',
-            default_value='calibration.yaml',
-            description='Archivo YAML con calibración intrínseca de la cámara'
+            'output_folder',
+            default_value='/home/drims/drims_ws/calibrations/extrinsic_calib_charuco_poses',
+            description='Carpeta de salida'
         ),
         DeclareLaunchArgument(
-            'robot_poses_file',
-            default_value='robot_poses.txt',
-            description='Archivo con las poses del robot'
-        ),
-        DeclareLaunchArgument(
-            'hand_eye_output',
-            default_value='hand_eye_calibration.yaml',
-            description='Archivo de salida para la calibración ojo-mano'
+            'eye_in_hand',
+            default_value='false',
+            description='Modo eye-in-hand o eye-to-hand'
         ),
         
-        # Nodo de calibración ojo-mano
+        # Nodo de calibración offline
         Node(
             package='charuco_calibrator',
-            executable='charuco_hand_eye',
-            name='charuco_hand_eye_calibrator',
+            executable='charuco_hand_eye_offline',
+            name='charuco_offline_calibration',
             output='screen',
             parameters=[{
-                'images_folder': LaunchConfiguration('images_folder'),
-                'config_file': LaunchConfiguration('config_file'),
-                'camera_intrinsics_file': LaunchConfiguration('camera_intrinsics_file'),
-                'robot_poses_file': LaunchConfiguration('robot_poses_file'),
-                'hand_eye_output': LaunchConfiguration('hand_eye_output'),
+                'pictures_folder': LaunchConfiguration('pictures_folder'),
+                'robot_poses_folder': LaunchConfiguration('robot_poses_folder'),
+                'output_folder': LaunchConfiguration('output_folder'),
+                'eye_in_hand': LaunchConfiguration('eye_in_hand'),
+                'publish_for_visp': False,
             }],
-            emulate_tty=True,
-        )
+            arguments=['--ros-args', '--log-level', 'info'],
+        ),
     ])
