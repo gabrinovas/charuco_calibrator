@@ -255,8 +255,11 @@ class HandEyeCalibrator(Node):
         
         # Estimar pose
         ret, rvec, tvec = aruco.estimatePoseCharucoBoard(
-            charuco_corners, charuco_ids, self.board,
-            self.camera_matrix, self.dist_coeffs
+            charuco_corners, 
+            charuco_ids, 
+            self.board, 
+            self.camera_matrix, 
+            self.dist_coeffs
         )
         
         if not ret:
