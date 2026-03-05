@@ -57,7 +57,9 @@ class HandEyeCalibrator(Node):
         self.load_config()
         
         # Cargar intrínsecos
-        self.load_camera_intrinsics()
+        if not self.load_camera_intrinsics():
+            self.get_logger().error("❌ No se pudo cargar la calibración intrínseca")
+            return
         
         # Configurar detector
         self.setup_charuco_board()
@@ -74,6 +76,7 @@ class HandEyeCalibrator(Node):
         self.get_logger().info(f"📁 Imágenes: {self.pictures_folder}")
         self.get_logger().info(f"📁 Poses robot: {self.robot_poses_folder}")
         self.get_logger().info(f"📁 Salida: {self.output_folder}")
+        self.get_logger().info(f"📁 Intrínsecos: {self.camera_intrinsics_file}")
         self.get_logger().info(f"🎯 Modo: {'Eye-in-hand' if self.eye_in_hand else 'Eye-to-hand'}")
         
         # Procesar imágenes al iniciar
@@ -126,28 +129,36 @@ class HandEyeCalibrator(Node):
         """Carga calibración intrínseca de la cámara"""
         if not os.path.exists(self.camera_intrinsics_file):
             self.get_logger().error(f"❌ No se encuentra archivo de intrínsecos: {self.camera_intrinsics_file}")
-            raise FileNotFoundError(f"Archivo de intrínsecos no encontrado: {self.camera_intrinsics_file}")
+            return False
         
-        with open(self.camera_intrinsics_file, 'r') as f:
-            data = yaml.safe_load(f)
-        
-        # Manejar diferentes formatos posibles
-        if 'camera_matrix' in data:
-            self.camera_matrix = np.array(data['camera_matrix'])
-        elif 'camera_matrix' in data.get('camera_matrix', {}):
-            self.camera_matrix = np.array(data['camera_matrix']['data']).reshape(3, 3)
-        else:
-            self.get_logger().error("❌ Formato de archivo de intrínsecos no reconocido")
-            raise ValueError("Formato de archivo de intrínsecos no reconocido")
-        
-        if 'distortion_coefficients' in data:
-            self.dist_coeffs = np.array(data['distortion_coefficients'])
-        elif 'distortion_coefficients' in data.get('distortion_coefficients', {}):
-            self.dist_coeffs = np.array(data['distortion_coefficients']['data'])
-        else:
-            self.dist_coeffs = np.zeros((5, 1))
-        
-        self.get_logger().info(f"✅ Intrínsecos cargados: {os.path.basename(self.camera_intrinsics_file)}")
+        try:
+            with open(self.camera_intrinsics_file, 'r') as f:
+                data = yaml.safe_load(f)
+            
+            # Manejar diferentes formatos posibles
+            if 'camera_matrix' in data:
+                self.camera_matrix = np.array(data['camera_matrix'])
+            elif 'camera_matrix' in data.get('camera_matrix', {}):
+                self.camera_matrix = np.array(data['camera_matrix']['data']).reshape(3, 3)
+            else:
+                self.get_logger().error("❌ Formato de archivo de intrínsecos no reconocido - no se encuentra 'camera_matrix'")
+                return False
+            
+            if 'distortion_coefficients' in data:
+                self.dist_coeffs = np.array(data['distortion_coefficients'])
+            elif 'distortion_coefficients' in data.get('distortion_coefficients', {}):
+                self.dist_coeffs = np.array(data['distortion_coefficients']['data'])
+            else:
+                self.get_logger().warn("⚠️ No se encontraron coeficientes de distorsión, usando ceros")
+                self.dist_coeffs = np.zeros((5, 1))
+            
+            self.get_logger().info(f"✅ Intrínsecos cargados: {os.path.basename(self.camera_intrinsics_file)}")
+            self.get_logger().info(f"   Matriz cámara:\n{self.camera_matrix}")
+            return True
+            
+        except Exception as e:
+            self.get_logger().error(f"❌ Error cargando intrínsecos: {e}")
+            return False
 
     def setup_charuco_board(self):
         """Configura el detector Charuco"""
@@ -184,6 +195,8 @@ class HandEyeCalibrator(Node):
         # Configurar detector para mejor precisión
         self.detector_params = aruco.DetectorParameters()
         self.detector = aruco.ArucoDetector(self.aruco_dict, self.detector_params)
+        
+        self.get_logger().info(f"✅ Detector Charuco configurado")
 
     def load_robot_poses(self):
         """Carga las poses del robot desde archivos YAML con el formato proporcionado"""
@@ -297,6 +310,7 @@ class HandEyeCalibrator(Node):
         pose_map = {pose['index']: pose for pose in self.robot_poses}
         
         # 4. Procesar cada imagen
+        successful_detections = 0
         for image_path in image_paths:
             img_index = self.extract_index_from_filename(image_path)
             
@@ -306,7 +320,7 @@ class HandEyeCalibrator(Node):
             
             # Buscar pose correspondiente
             if img_index not in pose_map:
-                self.get_logger().warn(f"⚠️ No hay pose para índice {img_index}")
+                self.get_logger().warn(f"⚠️ No hay pose para índice {img_index} en {os.path.basename(image_path)}")
                 continue
             
             pose = pose_map[img_index]
@@ -316,7 +330,7 @@ class HandEyeCalibrator(Node):
             rvec, tvec, R_board_in_cam, num_corners, viz_path = self.detect_board_in_image(image_path)
             
             if rvec is None:
-                self.get_logger().warn(f"   ⚠️ No se detectó tablero")
+                self.get_logger().warn(f"   ⚠️ No se detectó tablero en {os.path.basename(image_path)}")
                 continue
             
             # Guardar detección
@@ -349,6 +363,7 @@ class HandEyeCalibrator(Node):
                 }
             }
             self.calibration_pairs.append(pair)
+            successful_detections += 1
             
             self.get_logger().info(f"   ✅ Detectado con {num_corners} esquinas")
         
@@ -358,8 +373,8 @@ class HandEyeCalibrator(Node):
             self.save_calibration_pairs()
         
         self.processed = True
-        self.get_logger().info(f"\n✅ Procesamiento completado: {len(self.calibration_pairs)} pares válidos de {len(image_paths)} imágenes")
-        self.get_logger().info(f"📊 Detecciones exitosas: {len(self.detections)}")
+        self.get_logger().info(f"\n✅ Procesamiento completado: {successful_detections} detecciones exitosas de {len(image_paths)} imágenes")
+        self.get_logger().info(f"📊 Total pares de calibración: {len(self.calibration_pairs)}")
 
     def save_detections(self):
         """Guarda las detecciones en archivo YAML"""
@@ -417,25 +432,26 @@ class HandEyeCalibrator(Node):
         
         # También guardar una copia en la ubicación esperada por compute_calib.py
         global_pairs_file = '/home/drims/drims_ws/calibrations/charuco_detections.yaml'
-        with open(global_pairs_file, 'w') as f:
-            # Convertir a formato esperado por compute_calib.py
-            simplified_data = {
-                'timestamp': time.time(),
-                'eye_in_hand': self.eye_in_hand,
-                'num_pairs': len(self.calibration_pairs),
-                'pairs': []
+        
+        # Convertir a formato esperado por offline_find_charuco.py
+        simplified_data = {
+            'timestamp': time.time(),
+            'eye_in_hand': self.eye_in_hand,
+            'num_pairs': len(self.calibration_pairs),
+            'pairs': []
+        }
+        
+        for pair in self.calibration_pairs:
+            simplified_pair = {
+                'index': pair['index'],
+                'robot_position': pair['robot_pose']['position'],
+                'robot_orientation': pair['robot_pose']['orientation'],
+                'charuco_translation': pair['charuco_detection']['translation'],
+                'charuco_rotation_matrix': pair['charuco_detection']['rotation_matrix']
             }
-            
-            for pair in self.calibration_pairs:
-                simplified_pair = {
-                    'index': pair['index'],
-                    'robot_position': pair['robot_pose']['position'],
-                    'robot_orientation': pair['robot_pose']['orientation'],
-                    'charuco_translation': pair['charuco_detection']['translation'],
-                    'charuco_rotation_matrix': pair['charuco_detection']['rotation_matrix']
-                }
-                simplified_data['pairs'].append(simplified_pair)
-            
+            simplified_data['pairs'].append(simplified_pair)
+        
+        with open(global_pairs_file, 'w') as f:
             yaml.dump(simplified_data, f, default_flow_style=False, sort_keys=False, indent=2)
         
         self.get_logger().info(f"💾 Datos simplificados guardados en: {global_pairs_file}")
