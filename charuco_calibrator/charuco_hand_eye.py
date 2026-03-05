@@ -184,10 +184,9 @@ class HandEyeCalibrator(Node):
         
         dict_id = dictionary_map.get(self.dictionary_name, aruco.DICT_4X4_100)
         
-        # Para OpenCV 4.5.4 - API antigua
         self.aruco_dict = aruco.Dictionary_get(dict_id)
         
-        # Crear CharucoBoard - API antigua (funciones, no clases)
+        # Crear CharucoBoard
         self.board = aruco.CharucoBoard_create(
             self.cols, self.rows,
             self.square_length,
@@ -254,12 +253,18 @@ class HandEyeCalibrator(Node):
             return None, None, None, None, None
         
         # Estimar pose
-        ret, rvec, tvec = aruco.estimatePoseCharucoBoard(
+        rvec = np.zeros((3, 1), dtype=np.float32)
+        tvec = np.zeros((3, 1), dtype=np.float32)
+        
+        ret = aruco.estimatePoseCharucoBoard(
             charuco_corners, 
             charuco_ids, 
             self.board, 
             self.camera_matrix, 
-            self.dist_coeffs
+            self.dist_coeffs,
+            rvec, 
+            tvec,
+            False
         )
         
         if not ret:
