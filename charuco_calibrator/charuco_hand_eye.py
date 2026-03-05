@@ -183,20 +183,22 @@ class HandEyeCalibrator(Node):
         }
         
         dict_id = dictionary_map.get(self.dictionary_name, aruco.DICT_4X4_100)
-        self.aruco_dict = aruco.getPredefinedDictionary(dict_id)
         
-        self.board = aruco.CharucoBoard(
-            (self.cols, self.rows),
+        # Para OpenCV 4.5.4 - API antigua
+        self.aruco_dict = aruco.Dictionary_get(dict_id)
+        
+        # Crear CharucoBoard - API antigua (funciones, no clases)
+        self.board = aruco.CharucoBoard_create(
+            self.cols, self.rows,
             self.square_length,
             self.marker_length,
             self.aruco_dict
         )
         
-        # Configurar detector para mejor precisión
-        self.detector_params = aruco.DetectorParameters()
-        self.detector = aruco.ArucoDetector(self.aruco_dict, self.detector_params)
+        # Configurar detector
+        self.detector_params = aruco.DetectorParameters_create()
         
-        self.get_logger().info(f"✅ Detector Charuco configurado")
+        self.get_logger().info(f"✅ Detector Charuco configurado para OpenCV 4.5.4")
 
     def load_robot_poses(self):
         """Carga las poses del robot desde archivos YAML con el formato proporcionado"""
@@ -234,7 +236,11 @@ class HandEyeCalibrator(Node):
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         
         # Detectar marcadores
-        corners, ids, _ = aruco.detectMarkers(gray, self.aruco_dict)
+        corners, ids, _ = aruco.detectMarkers(
+            gray, 
+            self.aruco_dict, 
+            parameters=self.detector_params
+        )
         
         if ids is None or len(ids) < 4:
             return None, None, None, None, None
@@ -250,7 +256,7 @@ class HandEyeCalibrator(Node):
         # Estimar pose
         ret, rvec, tvec = aruco.estimatePoseCharucoBoard(
             charuco_corners, charuco_ids, self.board,
-            self.camera_matrix, self.dist_coeffs, None, None
+            self.camera_matrix, self.dist_coeffs
         )
         
         if not ret:
