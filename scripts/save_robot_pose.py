@@ -11,7 +11,7 @@ from tf2_ros.transform_listener import TransformListener
 
 class RobotPoseSaver(Node):
     """
-    Nodo para guardar poses del robot en archivos
+    Node for saving robot poses to files
     """
     
     def __init__(self):
@@ -25,31 +25,31 @@ class RobotPoseSaver(Node):
         self.base_frame = self.get_parameter('base_frame').value
         self.tool_frame = self.get_parameter('tool_frame').value
         
-        # Crear carpeta
+        # Create folder
         os.makedirs(self.output_folder, exist_ok=True)
         
         # TF buffer
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
         
-        # Servicio para guardar pose
+        # Service to save pose
         self.srv_save = self.create_service(Trigger, '~/save_pose', self.save_pose_callback)
         
         self.pose_counter = 0
-        self.get_logger().info(f"📁 Guardando poses en: {self.output_folder}")
+        self.get_logger().info(f"📁 Saving poses in: {self.output_folder}")
         self.get_logger().info(f"🔧 Frames: {self.base_frame} → {self.tool_frame}")
         
     def save_pose_callback(self, request, response):
-        """Guarda la pose actual del robot"""
+        """Saves current robot pose"""
         try:
-            # Obtener transform
+            # Get transform
             transform = self.tf_buffer.lookup_transform(
                 self.base_frame,
                 self.tool_frame,
                 rclpy.time.Time()
             )
             
-            # Preparar datos
+            # Prepare data
             pose_data = {
                 'timestamp': self.get_clock().now().to_msg().sec,
                 'frame_id': f"{self.base_frame}_to_{self.tool_frame}",
@@ -66,7 +66,7 @@ class RobotPoseSaver(Node):
                 ]
             }
             
-            # Guardar archivo
+            # Save file
             self.pose_counter += 1
             filename = f"pose_{self.pose_counter:03d}.yaml"
             filepath = os.path.join(self.output_folder, filename)
@@ -74,17 +74,17 @@ class RobotPoseSaver(Node):
             with open(filepath, 'w') as f:
                 yaml.dump(pose_data, f, default_flow_style=False)
             
-            # También guardar en formato TXT simple
+            # Also save in simple TXT format
             txt_file = os.path.join(self.output_folder, f"pose_{self.pose_counter:03d}.txt")
             with open(txt_file, 'w') as f:
                 f.write(f"{pose_data['position'][0]} {pose_data['position'][1]} {pose_data['position'][2]} ")
                 f.write(f"{pose_data['orientation'][0]} {pose_data['orientation'][1]} ")
                 f.write(f"{pose_data['orientation'][2]} {pose_data['orientation'][3]}")
             
-            self.get_logger().info(f"✅ Pose {self.pose_counter} guardada: {filename}")
+            self.get_logger().info(f"✅ Pose {self.pose_counter} saved: {filename}")
             
             response.success = True
-            response.message = f"Pose {self.pose_counter} guardada"
+            response.message = f"Pose {self.pose_counter} saved"
             
         except Exception as e:
             self.get_logger().error(f"❌ Error: {e}")

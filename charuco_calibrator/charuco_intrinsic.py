@@ -14,28 +14,28 @@ class CharucoIntrinsicCalibrator(Node):
     def __init__(self):
         super().__init__('charuco_intrinsic_calibrator')
         
-        # Parámetros que se pueden pasar por línea de comandos
+        # Parameters that can be passed by command line
         self.declare_parameter('images_folder', '')
         self.declare_parameter('config_file', 'charuco_params.yaml')
         self.declare_parameter('output_file', 'camera_intrinsics.yaml')
         
-        # Obtener parámetros
+        # Get parameters
         self.images_folder = self.get_parameter('images_folder').value
         config_file = self.get_parameter('config_file').value
         self.output_file = self.get_parameter('output_file').value
         
-        # Cargar configuración desde YAML
+        # Load configuration from YAML
         self.load_config(config_file)
         
-        # Crear diccionario Charuco
+        # Create Charuco dictionary
         self.setup_charuco_board()
         
         self.bridge = CvBridge()
         self.calibrate_from_folder()
 
     def load_config(self, config_file):
-        """Carga la configuración desde archivo YAML"""
-        # Buscar el archivo de configuración
+        """Loads configuration from YAML file"""
+        # Search for the configuration file
         possible_paths = [
             config_file,
             os.path.join(get_package_share_directory('charuco_calibrator'), 'config', config_file),
@@ -50,13 +50,13 @@ class CharucoIntrinsicCalibrator(Node):
                 break
         
         if config_path is None:
-            self.get_logger().error(f"❌ No se encontró archivo de configuración: {config_file}")
+            self.get_logger().error(f"❌ Configuration file not found: {config_file}")
             raise FileNotFoundError(f"Config file not found: {config_file}")
         
         with open(config_path, 'r') as f:
             config = yaml.safe_load(f)
         
-        # Extraer parámetros de charuco_calibrator
+        # Extract parameters from charuco_calibrator
         calib_params = config.get('charuco_calibrator', {}).get('ros__parameters', {})
         
         self.rows = calib_params.get('charuco_rows', 14)
@@ -64,16 +64,16 @@ class CharucoIntrinsicCalibrator(Node):
         self.square_length = calib_params.get('square_length', 0.020)
         self.marker_length = calib_params.get('marker_length', 0.015)
         self.dictionary_name = calib_params.get('dictionary', 'DICT_4X4_100')
-        # No usar el output_file del config, usar el del parámetro
+        # Do not use the output_file from config, use the one from parameter
         
-        self.get_logger().info(f"📋 Configuración cargada de: {config_path}")
-        self.get_logger().info(f"   Tablero: {self.cols}x{self.rows}")
+        self.get_logger().info(f"📋 Configuration loaded from: {config_path}")
+        self.get_logger().info(f"   Board: {self.cols}x{self.rows}")
         self.get_logger().info(f"   Square: {self.square_length}m, Marker: {self.marker_length}m")
-        self.get_logger().info(f"   Diccionario: {self.dictionary_name}")
+        self.get_logger().info(f"   Dictionary: {self.dictionary_name}")
 
     def setup_charuco_board(self):
-        """Configura el tablero Charuco según los parámetros"""
-        # Mapeo de nombres de diccionario a objetos de OpenCV
+        """Configures the Charuco board according to parameters"""
+        # Mapping dictionary names to OpenCV objects
         dictionary_map = {
             'DICT_4X4_50': aruco.DICT_4X4_50,
             'DICT_4X4_100': aruco.DICT_4X4_100,
@@ -98,10 +98,10 @@ class CharucoIntrinsicCalibrator(Node):
             dict_id = dictionary_map.get(self.dictionary_name, aruco.DICT_4X4_100)
             self.aruco_dict = aruco.getPredefinedDictionary(dict_id)
         except:
-            self.get_logger().warn(f"⚠️ No se pudo cargar {self.dictionary_name}, usando DICT_4X4_100")
+            self.get_logger().warn(f"⚠️ Could not load {self.dictionary_name}, using DICT_4X4_100")
             self.aruco_dict = aruco.getPredefinedDictionary(aruco.DICT_4X4_100)
         
-        # Crear el board
+        # Create the board
         self.board = aruco.CharucoBoard(
             (self.cols, self.rows),
             self.square_length,
@@ -110,25 +110,25 @@ class CharucoIntrinsicCalibrator(Node):
         )
 
     def calibrate_from_folder(self):
-        """Calibra la cámara usando imágenes de una carpeta"""
+        """Calibrates the camera using images from a folder"""
         
         if not self.images_folder:
-            self.get_logger().error("❌ No se especificó images_folder")
+            self.get_logger().error("❌ images_folder not specified")
             return
         
         if not os.path.exists(self.images_folder):
-            self.get_logger().error(f"❌ La carpeta no existe: {self.images_folder}")
+            self.get_logger().error(f"❌ Folder does not exist: {self.images_folder}")
             return
         
-        # Buscar imágenes
+        # Search images
         image_paths = glob.glob(os.path.join(self.images_folder, '*.jpg')) + \
                       glob.glob(os.path.join(self.images_folder, '*.png'))
         
         if len(image_paths) == 0:
-            self.get_logger().error(f"No se encontraron imágenes en {self.images_folder}")
+            self.get_logger().error(f"No images found in {self.images_folder}")
             return
         
-        self.get_logger().info(f"Encontradas {len(image_paths)} imágenes")
+        self.get_logger().info(f"Found {len(image_paths)} images")
         
         all_corners = []
         all_ids = []
@@ -136,14 +136,14 @@ class CharucoIntrinsicCalibrator(Node):
         valid_images = 0
         
         for image_path in image_paths:
-            self.get_logger().info(f"Procesando: {os.path.basename(image_path)}")
+            self.get_logger().info(f"Processing: {os.path.basename(image_path)}")
             img = cv2.imread(image_path)
             gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
             
             if image_size is None:
                 image_size = gray.shape[::-1]
             
-            # Detectar marcadores ArUco
+            # Detect ArUco markers
             corners, ids, _ = aruco.detectMarkers(gray, self.aruco_dict)
             
             if ids is not None and len(ids) > 3:
@@ -155,14 +155,14 @@ class CharucoIntrinsicCalibrator(Node):
                     all_corners.append(charuco_corners)
                     all_ids.append(charuco_ids)
                     valid_images += 1
-                    self.get_logger().info(f"   ✅ Detectadas {len(charuco_corners)} esquinas")
+                    self.get_logger().info(f"   ✅ Detected {len(charuco_corners)} corners")
                 else:
-                    self.get_logger().warn(f"   ⚠️ Pocas esquinas detectadas")
+                    self.get_logger().warn(f"   ⚠️ Few corners detected")
             else:
-                self.get_logger().warn(f"   ⚠️ Pocos marcadores detectados")
+                self.get_logger().warn(f"   ⚠️ Few markers detected")
         
         if len(all_corners) >= 5:
-            self.get_logger().info(f"📊 Calibrando con {len(all_corners)} imágenes válidas...")
+            self.get_logger().info(f"📊 Calibrating with {len(all_corners)} valid images...")
             
             ret, camera_matrix, dist_coeffs, rvecs, tvecs = aruco.calibrateCameraCharuco(
                 charucoCorners=all_corners,
@@ -174,24 +174,24 @@ class CharucoIntrinsicCalibrator(Node):
             )
             
             self.get_logger().info(f"\n{'='*50}")
-            self.get_logger().info("✅ CALIBRACIÓN EXITOSA")
+            self.get_logger().info("✅ CALIBRATION SUCCESSFUL")
             self.get_logger().info(f"{'='*50}")
-            self.get_logger().info(f"📏 Error de reproyección: {ret:.6f}")
-            self.get_logger().info(f"\n📷 Matriz de cámara:\n{camera_matrix}")
-            self.get_logger().info(f"\n📐 Coeficientes de distorsión:\n{dist_coeffs.reshape(-1)}")
+            self.get_logger().info(f"📏 Reprojection error: {ret:.6f}")
+            self.get_logger().info(f"\n📷 Camera matrix:\n{camera_matrix}")
+            self.get_logger().info(f"\n📐 Distortion coefficients:\n{dist_coeffs.reshape(-1)}")
             
-            # Guardar calibración
+            # Save calibration
             self.save_calibration(camera_matrix, dist_coeffs, image_size, ret, valid_images)
         else:
-            self.get_logger().error(f"❌ No se detectaron suficientes patrones. Válidas: {len(all_corners)}/5")
+            self.get_logger().error(f"❌ Not enough patterns detected. Valid: {len(all_corners)}/5")
 
     def save_calibration(self, camera_matrix, dist_coeffs, image_size, reprojection_error, valid_images):
-        """Guarda los parámetros de calibración en archivo YAML en ~/drims_ws/calibrations/"""
+        """Saves the calibration parameters in YAML file in ~/drims_ws/calibrations/"""
         
         calibration_folder = os.path.expanduser('~/drims_ws/calibrations')
         os.makedirs(calibration_folder, exist_ok=True)
         
-        # El nombre del archivo será camera_intrinsics.yaml
+        # The filename will be camera_intrinsics.yaml
         output_path = os.path.join(calibration_folder, 'camera_intrinsics.yaml')
         
         calibration_data = {
@@ -201,9 +201,9 @@ class CharucoIntrinsicCalibrator(Node):
             'image_height': image_size[1],
             'reprojection_error': float(reprojection_error),
             'calibration_date': self.get_clock().now().to_msg().sec,
-            'images_processed': valid_images,  # Imágenes válidas usadas
+            'images_processed': valid_images,  # Valid images used
             'images_total': len(glob.glob(os.path.join(self.images_folder, '*.jpg')) + 
-                            glob.glob(os.path.join(self.images_folder, '*.png'))),  # Total de imágenes
+                            glob.glob(os.path.join(self.images_folder, '*.png'))),  # Total images
             'charuco_config': {
                 'rows': self.rows,
                 'cols': self.cols,
@@ -216,8 +216,8 @@ class CharucoIntrinsicCalibrator(Node):
         with open(output_path, 'w') as f:
             yaml.dump(calibration_data, f, default_flow_style=False)
         
-        self.get_logger().info(f"💾 Calibración guardada en: {output_path}")
-        self.get_logger().info(f"📁 Carpeta de imágenes usada: {self.images_folder}")
+        self.get_logger().info(f"💾 Calibration saved in: {output_path}")
+        self.get_logger().info(f"📁 Image folder used: {self.images_folder}")
 
 def main(args=None):
     rclpy.init(args=args)

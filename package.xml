@@ -17,10 +17,10 @@
   <depend>std_srvs</depend>
   <depend>yaml_cpp_vendor</depend>
   
-  <!-- Dependencias para VISP -->
+  <!-- Dependencies for VISP -->
   <depend>visp_hand2eye_calibration</depend>
   
-  <!-- Dependencias para FlexBE -->
+  <!-- Dependencies for FlexBE -->
   <depend>flexbe_core</depend>
   <depend>flexbe_msgs</depend>
 

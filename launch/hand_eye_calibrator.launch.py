@@ -7,29 +7,29 @@ from launch_ros.substitutions import FindPackageShare
 
 def generate_launch_description():
     return LaunchDescription([
-        # Argumentos
+        # Arguments
         DeclareLaunchArgument(
             'pictures_folder',
             default_value='/home/drims/drims_ws/calibrations/extrinsic_calibration/pictures',
-            description='Carpeta con imágenes'
+            description='Folder with images'
         ),
         DeclareLaunchArgument(
             'robot_poses_folder',
             default_value='/home/drims/drims_ws/calibrations/extrinsic_calibration/robot_poses',
-            description='Carpeta con poses del robot'
+            description='Folder with robot poses'
         ),
         DeclareLaunchArgument(
             'output_folder',
             default_value='/home/drims/drims_ws/calibrations/extrinsic_calib_charuco_poses',
-            description='Carpeta de salida'
+            description='Output folder'
         ),
         DeclareLaunchArgument(
             'eye_in_hand',
             default_value='false',
-            description='Modo eye-in-hand o eye-to-hand'
+            description='Eye-in-hand or eye-to-hand mode'
         ),
         
-        # Nodo de calibración offline
+        # Offline calibration node
         Node(
             package='charuco_calibrator',
             executable='charuco_hand_eye_offline',

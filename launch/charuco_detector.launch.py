@@ -17,22 +17,22 @@ def generate_launch_description():
         DeclareLaunchArgument(
             'images_folder',
             default_value='',
-            description='Carpeta con las imágenes para calibración'
+            description='Folder with images for calibration'
         ),
         DeclareLaunchArgument(
             'config_file',
             default_value=default_config_file,
-            description='Archivo de configuración YAML'
+            description='YAML configuration file'
         ),
         DeclareLaunchArgument(
             'output_file',
             default_value='calibration.yaml',
-            description='Nombre del archivo de salida'
+            description='Name of the output file'
         ),
         DeclareLaunchArgument(
             'show_preview',
             default_value='false',
-            description='Mostrar preview'
+            description='Show preview'
         ),
         
         Node(

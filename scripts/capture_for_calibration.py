@@ -7,31 +7,31 @@ from datetime import datetime
 
 def capture_images_for_calibration(save_folder, camera_id=0, wait_time=2):
     """
-    Captura imágenes para calibración
+    Captures images for calibration
     
     Args:
-        save_folder: Carpeta donde guardar las imágenes
-        camera_id: ID de la cámara
-        wait_time: Tiempo de espera entre capturas (segundos)
+        save_folder: Folder to save images
+        camera_id: Camera ID
+        wait_time: Wait time between captures (seconds)
     """
-    # Crear carpeta si no existe
+    # Create folder if it does not exist
     os.makedirs(save_folder, exist_ok=True)
     
-    # Inicializar cámara
+    # Initialize camera
     cap = cv2.VideoCapture(camera_id)
     
-    # Configurar resolución (ajustar según tu cámara)
+    # Configure resolution (adjust according to your camera)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
     
     print("="*50)
-    print("📸 CAPTURADOR DE IMÁGENES PARA CALIBRACIÓN")
+    print("📸 IMAGE CAPTURER FOR CALIBRATION")
     print("="*50)
-    print(f"Carpeta de guardado: {save_folder}")
-    print("\nControles:")
-    print("  - Presiona ESPACIO para capturar imagen")
-    print("  - Presiona 'q' para salir")
-    print("  - Presiona 'c' para cambiar modo continuo")
+    print(f"Save folder: {save_folder}")
+    print("\nControls:")
+    print("  - Press SPACE to capture image")
+    print("  - Press 'q' to exit")
+    print("  - Press 'c' to toggle continuous mode")
     print("="*50)
     
     image_count = len([f for f in os.listdir(save_folder) if f.endswith('.jpg')])
@@ -40,60 +40,60 @@ def capture_images_for_calibration(save_folder, camera_id=0, wait_time=2):
     while True:
         ret, frame = cap.read()
         if not ret:
-            print("❌ Error al capturar frame")
+            print("❌ Error capturing frame")
             break
         
-        # Mostrar información en la imagen
+        # Show information on the image
         display_frame = frame.copy()
-        cv2.putText(display_frame, f"Imágenes: {image_count}", (10, 30),
+        cv2.putText(display_frame, f"Images: {image_count}", (10, 30),
                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-        cv2.putText(display_frame, f"Modo: {'CONTINUO' if continuous_mode else 'MANUAL'}", (10, 60),
+        cv2.putText(display_frame, f"Mode: {'CONTINUOUS' if continuous_mode else 'MANUAL'}", (10, 60),
                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-        cv2.putText(display_frame, "ESPACIO: capturar | q: salir | c: cambiar modo", (10, 90),
+        cv2.putText(display_frame, "SPACE: capture | q: exit | c: toggle mode", (10, 90),
                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
         
-        cv2.imshow('Captura para Calibración', display_frame)
+        cv2.imshow('Capture for Calibration', display_frame)
         
         key = cv2.waitKey(1) & 0xFF
         
-        if key == ord(' '):  # Espacio - captura manual
+        if key == ord(' '):  # Space - manual capture
             image_count = save_image(frame, save_folder, image_count)
             
-        elif key == ord('c'):  # Cambiar modo continuo
+        elif key == ord('c'):  # Toggle continuous mode
             continuous_mode = not continuous_mode
-            print(f"🔄 Modo continuo: {'ACTIVADO' if continuous_mode else 'DESACTIVADO'}")
+            print(f"🔄 Continuous mode: {'ACTIVATED' if continuous_mode else 'DEACTIVATED'}")
             
-        elif key == ord('q'):  # Salir
+        elif key == ord('q'):  # Exit
             break
         
-        # Modo continuo
+        # Continuous mode
         if continuous_mode:
             time.sleep(wait_time)
             image_count = save_image(frame, save_folder, image_count)
     
     cap.release()
     cv2.destroyAllWindows()
-    print(f"\n✅ Captura finalizada. Total imágenes: {image_count}")
+    print(f"\n✅ Capture finished. Total images: {image_count}")
 
 def save_image(frame, folder, count):
-    """Guarda una imagen con nombre secuencial"""
+    """Saves an image with sequential name"""
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"calib_image_{count+1:03d}_{timestamp}.jpg"
     filepath = os.path.join(folder, filename)
     cv2.imwrite(filepath, frame)
-    print(f"✅ Imagen guardada: {filename}")
+    print(f"✅ Image saved: {filename}")
     return count + 1
 
 def main():
     import argparse
     
-    parser = argparse.ArgumentParser(description='Capturador de imágenes para calibración')
+    parser = argparse.ArgumentParser(description='Image capturer for calibration')
     parser.add_argument('--folder', type=str, default='./calibration_images',
-                       help='Carpeta para guardar las imágenes')
+                       help='Folder to save images')
     parser.add_argument('--camera', type=int, default=0,
-                       help='ID de la cámara')
+                       help='Camera ID')
     parser.add_argument('--wait', type=float, default=2.0,
-                       help='Tiempo de espera entre capturas en modo continuo')
+                       help='Wait time between captures in continuous mode')
     
     args = parser.parse_args()
     

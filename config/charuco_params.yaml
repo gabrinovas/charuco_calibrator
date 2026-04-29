@@ -1,37 +1,37 @@
 charuco_calibrator:
   ros__parameters:
-    # ===== PARÁMETROS DEL TABLERO CHARUCO =====
-    # Según PDF: ChArUco__A4_210x297mm__10x14_Board__70_Markers__
+    # ===== CHARUCO BOARD PARAMETERS =====
+    # According to PDF: ChArUco__A4_210x297mm__10x14_Board__70_Markers__
     # 20mm_SquareSize__15mm_MarkerSize__DictionaryNumber_3_4X4__4_BitsMarkers.pdf
     
-    # Dimensiones del tablero
-    charuco_rows: 14                          # Número de filas (14 en el PDF)
-    charuco_cols: 10                          # Número de columnas (10 en el PDF)
+    # Board dimensions
+    charuco_rows: 14                          # Number of rows (14 in the PDF)
+    charuco_cols: 10                          # Number of columns (10 in the PDF)
     
-    # Tamaños en metros
+    # Sizes in meters
     square_length: 0.020                       # 20 mm
     marker_length: 0.015                       # 15 mm
     
-    # Diccionario ArUco
+    # ArUco Dictionary
     # Dictionary Number 3 = DICT_4X4_100
     dictionary: "DICT_4X4_100"
     
-    # ===== PARÁMETROS DE CALIBRACIÓN =====
-    # Archivos de salida
-    output_file: "calibration.yaml"            # Resultado de calibración intrínseca
-    robot_poses_file: "robot_poses.txt"        # Poses del robot (para ojo-mano)
-    hand_eye_output: "hand_eye_calibration.yaml" # Resultado de calibración ojo-mano
+    # ===== CALIBRATION PARAMETERS =====
+    # Output files
+    output_file: "calibration.yaml"            # Intrinsic calibration result
+    robot_poses_file: "robot_poses.txt"        # Robot poses (for hand-eye)
+    hand_eye_output: "hand_eye_calibration.yaml" # Hand-eye calibration result
     
-    # ===== PARÁMETROS DE LA CÁMARA =====
-    camera_model: "realsense_d435i"             # Modelo de cámara
-    image_width: 1920                           # Resolución recomendada
+    # ===== CAMERA PARAMETERS =====
+    camera_model: "realsense_d435i"             # Camera model
+    image_width: 1920                           # Recommended resolution
     image_height: 1080
     
-    # ===== PARÁMETROS DE DETECCIÓN =====
-    min_markers: 4                              # Mínimo de marcadores para considerar
-    min_corners: 10                             # Mínimo de esquinas Charuco
-    min_valid_images: 5                          # Mínimo de imágenes válidas para calibrar
+    # ===== DETECTION PARAMETERS =====
+    min_markers: 4                              # Minimum markers to consider
+    min_corners: 10                             # Minimum Charuco corners
+    min_valid_images: 5                          # Minimum valid images to calibrate
     
-    # ===== PARÁMETROS DE VISUALIZACIÓN =====
-    show_preview: true                          # Mostrar preview durante captura
-    preview_time: 500                            # Tiempo de preview en ms
+    # ===== VISUALIZATION PARAMETERS =====
+    show_preview: true                          # Show preview during capture
+    preview_time: 500                            # Preview time in ms

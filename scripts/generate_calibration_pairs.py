@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Script para generar pares de calibración a partir de imágenes y poses guardadas.
-Ejecutar después de tener todas las imágenes y poses del robot.
+Script to generate calibration pairs from images and saved poses.
+Run after having all images and robot poses.
 """
 
 import os
@@ -20,13 +20,13 @@ def main():
     OUTPUT_FOLDER = "/home/drims/drims_ws/calibrations/extrinsic_calib_charuco_poses"
     CONFIG_FILE = "/home/drims/drims_ws/src/charuco_calibrator/config/charuco_params.yaml"
     
-    # Crear carpetas de salida
+    # Create output folders
     PAIRS_FOLDER = os.path.join(OUTPUT_FOLDER, "pairs")
     DETECTIONS_FOLDER = os.path.join(OUTPUT_FOLDER, "detections")
     os.makedirs(PAIRS_FOLDER, exist_ok=True)
     os.makedirs(DETECTIONS_FOLDER, exist_ok=True)
     
-    # Cargar configuración del tablero
+    # Load board configuration
     with open(CONFIG_FILE, 'r') as f:
         config = yaml.safe_load(f)
     
@@ -38,11 +38,25 @@ def main():
     marker_length = calib_params.get('marker_length', 0.015)
     dictionary_name = calib_params.get('dictionary', 'DICT_4X4_100')
     
-    # Configurar detector
+    # Configure detector
     dictionary_map = {
+        'DICT_4X4_50': aruco.DICT_4X4_50,
         'DICT_4X4_100': aruco.DICT_4X4_100,
         'DICT_4X4_250': aruco.DICT_4X4_250,
-        # ... otros diccionarios
+        'DICT_4X4_1000': aruco.DICT_4X4_1000,
+        'DICT_5X5_50': aruco.DICT_5X5_50,
+        'DICT_5X5_100': aruco.DICT_5X5_100,
+        'DICT_5X5_250': aruco.DICT_5X5_250,
+        'DICT_5X5_1000': aruco.DICT_5X5_1000,
+        'DICT_6X6_50': aruco.DICT_6X6_50,
+        'DICT_6X6_100': aruco.DICT_6X6_100,
+        'DICT_6X6_250': aruco.DICT_6X6_250,
+        'DICT_6X6_1000': aruco.DICT_6X6_1000,
+        'DICT_7X7_50': aruco.DICT_7X7_50,
+        'DICT_7X7_100': aruco.DICT_7X7_100,
+        'DICT_7X7_250': aruco.DICT_7X7_250,
+        'DICT_7X7_1000': aruco.DICT_7X7_1000,
+        'DICT_ARUCO_ORIGINAL': aruco.DICT_ARUCO_ORIGINAL
     }
     
     dict_id = dictionary_map.get(dictionary_name, aruco.DICT_4X4_100)
@@ -55,7 +69,7 @@ def main():
         aruco_dict
     )
     
-    # Cargar intrínsecos de cámara (asumiendo que están en pictures_folder)
+    # Load camera intrinsics (assuming they are in pictures_folder)
     intrinsics_file = os.path.join(PICTURES_FOLDER, 'calibration.yaml')
     if os.path.exists(intrinsics_file):
         with open(intrinsics_file, 'r') as f:
@@ -63,74 +77,74 @@ def main():
         camera_matrix = np.array(intrinsics['camera_matrix'])
         dist_coeffs = np.array(intrinsics['distortion_coefficients'])
     else:
-        print("⚠️ No se encontró archivo de intrínsecos, usando valores por defecto")
+        print("⚠️ Intrinsics file not found, using default values")
         camera_matrix = np.eye(3)
         dist_coeffs = np.zeros(5)
     
-    # Buscar imágenes
+    # Search images
     image_paths = sorted(glob.glob(os.path.join(PICTURES_FOLDER, '*.jpg')) +
                          glob.glob(os.path.join(PICTURES_FOLDER, '*.png')))
     
-    # Buscar poses del robot
+    # Search robot poses
     pose_files = sorted(glob.glob(os.path.join(ROBOT_POSES_FOLDER, 'pose_*.yaml')))
     
-    print(f"📸 Imágenes encontradas: {len(image_paths)}")
-    print(f"🤖 Poses encontradas: {len(pose_files)}")
+    print(f"📸 Images found: {len(image_paths)}")
+    print(f"🤖 Poses found: {len(pose_files)}")
     
-    # Procesar cada par
+    # Process each pair
     valid_pairs = 0
     
     for i, (image_path, pose_file) in enumerate(zip(image_paths, pose_files)):
-        print(f"\n📌 Procesando par {i+1}:")
-        print(f"   Imagen: {os.path.basename(image_path)}")
+        print(f"\n📌 Processing pair {i+1}:")
+        print(f"   Image: {os.path.basename(image_path)}")
         print(f"   Pose: {os.path.basename(pose_file)}")
         
-        # Leer pose del robot
+        # Read robot pose
         with open(pose_file, 'r') as f:
             pose_data = yaml.safe_load(f)
         
-        # Leer imagen
+        # Read image
         img = cv2.imread(image_path)
         if img is None:
-            print(f"   ❌ No se pudo leer la imagen")
+            print(f"   ❌ Could not read the image")
             continue
         
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         
-        # Detectar marcadores
+        # Detect markers
         corners, ids, _ = aruco.detectMarkers(gray, aruco_dict)
         
         if ids is None or len(ids) < 4:
-            print(f"   ❌ No se detectaron suficientes marcadores")
+            print(f"   ❌ Not enough markers detected")
             continue
         
-        # Interpolar esquinas Charuco
+        # Interpolate Charuco corners
         ret, charuco_corners, charuco_ids = aruco.interpolateCornersCharuco(
             corners, ids, gray, board
         )
         
         if charuco_corners is None or len(charuco_corners) < 10:
-            print(f"   ❌ No hay suficientes esquinas Charuco")
+            print(f"   ❌ Not enough Charuco corners")
             continue
         
-        # Estimar pose
+        # Estimate pose
         ret, rvec, tvec = aruco.estimatePoseCharucoBoard(
             charuco_corners, charuco_ids, board,
             camera_matrix, dist_coeffs, None, None
         )
         
         if not ret:
-            print(f"   ❌ No se pudo estimar la pose")
+            print(f"   ❌ Could not estimate pose")
             continue
         
-        # Convertir a matriz de rotación
+        # Convert to rotation matrix
         R, _ = cv2.Rodrigues(rvec)
         
-        # Obtener cuaternión
+        # Get quaternion
         T = np.vstack([np.hstack([R, tvec.reshape(3, 1)]), [0, 0, 0, 1]])
         quat = tf_transformations.quaternion_from_matrix(T)
         
-        # Guardar detección individual
+        # Save individual detection
         detection_data = {
             'image': os.path.basename(image_path),
             'timestamp': datetime.now().isoformat(),
@@ -145,7 +159,7 @@ def main():
         with open(detection_file, 'w') as f:
             yaml.dump(detection_data, f, default_flow_style=False)
         
-        # Guardar par completo
+        # Save complete pair
         pair_data = {
             'index': i+1,
             'image_file': os.path.basename(image_path),
@@ -166,7 +180,7 @@ def main():
         with open(pair_file, 'w') as f:
             yaml.dump(pair_data, f, default_flow_style=False)
         
-        # Visualización
+        # Visualization
         img_viz = cv2.aruco.drawDetectedMarkers(img.copy(), corners, ids)
         img_viz = cv2.aruco.drawDetectedCornersCharuco(img_viz, charuco_corners, charuco_ids)
         cv2.drawFrameAxes(img_viz, camera_matrix, dist_coeffs, rvec, tvec, 0.03)
@@ -175,9 +189,9 @@ def main():
         cv2.imwrite(viz_path, img_viz)
         
         valid_pairs += 1
-        print(f"   ✅ Par válido #{valid_pairs} ({len(charuco_corners)} esquinas)")
+        print(f"   ✅ Valid pair #{valid_pairs} ({len(charuco_corners)} corners)")
     
-    # Guardar resumen
+    # Save summary
     summary = {
         'total_images': len(image_paths),
         'total_poses': len(pose_files),
@@ -197,11 +211,11 @@ def main():
         yaml.dump(summary, f, default_flow_style=False)
     
     print(f"\n{'='*50}")
-    print(f"✅ Procesamiento completado")
-    print(f"📊 Pares válidos: {valid_pairs}/{len(image_paths)}")
-    print(f"📁 Detecciones: {DETECTIONS_FOLDER}")
-    print(f"📁 Pares: {PAIRS_FOLDER}")
-    print(f"📄 Resumen: {summary_file}")
+    print(f"✅ Processing completed")
+    print(f"📊 Valid pairs: {valid_pairs}/{len(image_paths)}")
+    print(f"📁 Detections: {DETECTIONS_FOLDER}")
+    print(f"📁 Pairs: {PAIRS_FOLDER}")
+    print(f"📄 Summary: {summary_file}")
     print(f"{'='*50}")
 
 if __name__ == '__main__':
