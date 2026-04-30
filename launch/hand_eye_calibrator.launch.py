@@ -10,17 +10,17 @@ def generate_launch_description():
         # Arguments
         DeclareLaunchArgument(
             'pictures_folder',
-            default_value='/home/drims/drims_ws/calibrations/extrinsic_calibration/pictures',
+            default_value='/home/drims/calibrations/extrinsic_calibration/pictures',
             description='Folder with images'
         ),
         DeclareLaunchArgument(
             'robot_poses_folder',
-            default_value='/home/drims/drims_ws/calibrations/extrinsic_calibration/robot_poses',
+            default_value='/home/drims/calibrations/extrinsic_calibration/robot_poses',
             description='Folder with robot poses'
         ),
         DeclareLaunchArgument(
             'output_folder',
-            default_value='/home/drims/drims_ws/calibrations/extrinsic_calib_charuco_poses',
+            default_value='/home/drims/calibrations/extrinsic_calib_charuco_poses',
             description='Output folder'
         ),
         DeclareLaunchArgument(

@@ -17,7 +17,7 @@ class RobotPoseSaver(Node):
     def __init__(self):
         super().__init__('robot_pose_saver')
         
-        self.declare_parameter('output_folder', '/home/drims/drims_ws/calibrations/extrinsic_calibration/robot_poses')
+        self.declare_parameter('output_folder', '/home/drims/calibrations/extrinsic_calibration/robot_poses')
         self.declare_parameter('base_frame', 'base_link')
         self.declare_parameter('tool_frame', 'tool0')
         

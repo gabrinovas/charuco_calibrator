@@ -15,10 +15,10 @@ from datetime import datetime
 
 def main():
     # Configuración
-    PICTURES_FOLDER = "/home/drims/drims_ws/calibrations/extrinsic_calibration/pictures"
-    ROBOT_POSES_FOLDER = "/home/drims/drims_ws/calibrations/extrinsic_calibration/robot_poses"
-    OUTPUT_FOLDER = "/home/drims/drims_ws/calibrations/extrinsic_calib_charuco_poses"
-    CONFIG_FILE = "/home/drims/drims_ws/src/charuco_calibrator/config/charuco_params.yaml"
+    PICTURES_FOLDER = "/home/drims/calibrations/extrinsic_calibration/pictures"
+    ROBOT_POSES_FOLDER = "/home/drims/calibrations/extrinsic_calibration/robot_poses"
+    OUTPUT_FOLDER = "/home/drims/calibrations/extrinsic_calib_charuco_poses"
+    CONFIG_FILE = "/home/drims/static/drims2_ws/src/hand-eye-calibration_ROS2/charuco_calibrator/config/charuco_params.yaml"
     
     # Create output folders
     PAIRS_FOLDER = os.path.join(OUTPUT_FOLDER, "pairs")

@@ -186,9 +186,9 @@ class CharucoIntrinsicCalibrator(Node):
             self.get_logger().error(f"❌ Not enough patterns detected. Valid: {len(all_corners)}/5")
 
     def save_calibration(self, camera_matrix, dist_coeffs, image_size, reprojection_error, valid_images):
-        """Saves the calibration parameters in YAML file in ~/drims_ws/calibrations/"""
+        """Saves the calibration parameters in YAML file in ~/calibrations/"""
         
-        calibration_folder = os.path.expanduser('~/drims_ws/calibrations')
+        calibration_folder = os.path.expanduser('~/calibrations')
         os.makedirs(calibration_folder, exist_ok=True)
         
         # The filename will be camera_intrinsics.yaml

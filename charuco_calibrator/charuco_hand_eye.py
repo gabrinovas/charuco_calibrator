@@ -24,11 +24,11 @@ class HandEyeCalibrator(Node):
         super().__init__('hand_eye_calibrator')
         
         # Parameters
-        self.declare_parameter('pictures_folder', '/home/drims/drims_ws/calibrations/extrinsic_calibration/pictures')
-        self.declare_parameter('robot_poses_folder', '/home/drims/drims_ws/calibrations/extrinsic_calibration/robot_poses')
-        self.declare_parameter('output_folder', '/home/drims/drims_ws/calibrations/extrinsic_calibration/charuco_table_poses')
+        self.declare_parameter('pictures_folder', '/home/drims/calibrations/extrinsic_calibration/pictures')
+        self.declare_parameter('robot_poses_folder', '/home/drims/calibrations/extrinsic_calibration/robot_poses')
+        self.declare_parameter('output_folder', '/home/drims/calibrations/extrinsic_calibration/charuco_table_poses')
         self.declare_parameter('config_file', 'charuco_params.yaml')
-        self.declare_parameter('camera_intrinsics_file', '/home/drims/drims_ws/calibrations/camera_intrinsics.yaml')
+        self.declare_parameter('camera_intrinsics_file', '/home/drims/calibrations/camera_intrinsics.yaml')
         self.declare_parameter('eye_in_hand', False)
         self.declare_parameter('publish_rate', 1.0)  # Hz to publish
         self.declare_parameter('save_results', True)  # Save results to file
@@ -88,8 +88,8 @@ class HandEyeCalibrator(Node):
         possible_paths = [
             self.config_file,
             os.path.join(get_package_share_directory('charuco_calibrator'), 'config', self.config_file),
-            os.path.join('/home/drims/drims_ws/src/charuco_calibrator/config', self.config_file),
-            os.path.join('/home/drims/drims_ws/calibrations', self.config_file)
+            os.path.join('/home/drims/static/drims2_ws/src/hand-eye-calibration_ROS2/charuco_calibrator/config/charuco_params.yaml', self.config_file),
+            os.path.join('/home/drims/calibrations', self.config_file)
         ]
         
         config_path = None
@@ -445,7 +445,7 @@ class HandEyeCalibrator(Node):
         self.get_logger().info(f"💾 Calibration pairs saved in: {output_file}")
         
         # Also save a copy in the location expected by compute_calib.py
-        global_pairs_file = '/home/drims/drims_ws/calibrations/charuco_detections.yaml'
+        global_pairs_file = '/home/drims/calibrations/charuco_detections.yaml'
         
         # Convert to format expected by offline_find_charuco.py
         simplified_data = {
