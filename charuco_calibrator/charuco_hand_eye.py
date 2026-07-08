@@ -506,10 +506,9 @@ class HandEyeCalibrator(Node):
             t = pair['charuco_detection']['translation']
             R = np.array(pair['charuco_detection']['rotation_matrix'])
             
-            # Convert rotation matrix to quaternion
-            T = np.eye(4)
-            T[:3, :3] = R
-            quat_charuco = tf_transformations.quaternion_from_matrix(T)
+            # Convert rotation matrix to quaternion using scipy
+            from scipy.spatial.transform import Rotation as R_scipy
+            quat_charuco = R_scipy.from_matrix(R).as_quat()
             
             trans_charuco.translation.x = float(t[0])
             trans_charuco.translation.y = float(t[1])
