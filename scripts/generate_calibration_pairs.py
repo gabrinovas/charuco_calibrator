@@ -14,11 +14,11 @@ import tf_transformations
 from datetime import datetime
 
 def main():
-    # Configuración
-    PICTURES_FOLDER = "/home/drims/calibrations/extrinsic_calibration/pictures"
-    ROBOT_POSES_FOLDER = "/home/drims/calibrations/extrinsic_calibration/robot_poses"
-    OUTPUT_FOLDER = "/home/drims/calibrations/extrinsic_calib_charuco_poses"
-    CONFIG_FILE = "/home/drims/static/drims2_ws/src/hand-eye-calibration_ROS2/charuco_calibrator/config/charuco_params.yaml"
+    home_calib = os.path.expanduser('~/calibrations')
+    PICTURES_FOLDER = os.path.join(home_calib, "extrinsic_calibration/pictures")
+    ROBOT_POSES_FOLDER = os.path.join(home_calib, "extrinsic_calibration/robot_poses")
+    OUTPUT_FOLDER = os.path.join(home_calib, "extrinsic_calib_charuco_poses")
+    CONFIG_FILE = os.path.join(home_calib, "charuco_params.yaml")
     
     # Create output folders
     PAIRS_FOLDER = os.path.join(OUTPUT_FOLDER, "pairs")

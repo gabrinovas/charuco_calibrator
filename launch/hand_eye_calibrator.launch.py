@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 from launch import LaunchDescription
 from launch_ros.actions import Node
 from launch.actions import DeclareLaunchArgument, ExecuteProcess
@@ -6,21 +7,22 @@ from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
 
 def generate_launch_description():
+    home_dir = os.path.expanduser('~')
     return LaunchDescription([
         # Arguments
         DeclareLaunchArgument(
             'pictures_folder',
-            default_value='/home/drims/calibrations/extrinsic_calibration/pictures',
+            default_value=os.path.join(home_dir, 'calibrations/extrinsic_calibration/pictures'),
             description='Folder with images'
         ),
         DeclareLaunchArgument(
             'robot_poses_folder',
-            default_value='/home/drims/calibrations/extrinsic_calibration/robot_poses',
+            default_value=os.path.join(home_dir, 'calibrations/extrinsic_calibration/robot_poses'),
             description='Folder with robot poses'
         ),
         DeclareLaunchArgument(
             'output_folder',
-            default_value='/home/drims/calibrations/extrinsic_calib_charuco_poses',
+            default_value=os.path.join(home_dir, 'calibrations/extrinsic_calib_charuco_poses'),
             description='Output folder'
         ),
         DeclareLaunchArgument(
