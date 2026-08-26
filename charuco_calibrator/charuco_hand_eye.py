@@ -38,6 +38,8 @@ class HandEyeCalibrator(Node):
         self.declare_parameter('config_file', 'charuco_params.yaml')
         self.declare_parameter('camera_intrinsics_file', os.path.join(home_calib, 'camera_intrinsics.yaml'))
         self.declare_parameter('eye_in_hand', False)
+        self.declare_parameter('robot_name', 'ur5e')
+        self.declare_parameter('base_frame', 'base')
         self.declare_parameter('publish_rate', 1.0)  # Hz to publish
         self.declare_parameter('save_results', True)  # Save results to file
         
@@ -48,6 +50,10 @@ class HandEyeCalibrator(Node):
         self.config_file = self.get_parameter('config_file').value
         self.camera_intrinsics_file = self.get_parameter('camera_intrinsics_file').value
         self.eye_in_hand = self.get_parameter('eye_in_hand').value
+        self.robot_name = self.get_parameter('robot_name').value
+        self.base_frame = self.get_parameter('base_frame').value
+        if 'lite6' in self.robot_name.lower() and self.base_frame == 'base':
+            self.base_frame = 'link_base'
         self.publish_rate = self.get_parameter('publish_rate').value
         self.save_results = self.get_parameter('save_results').value
         
@@ -222,7 +228,7 @@ class HandEyeCalibrator(Node):
                     'file': pose_file,
                     'index': data['index'],
                     'timestamp': data.get('timestamp', 0),
-                    'frame_id': data.get('frame_id', 'base_link_to_tool0'),
+                    'frame_id': data.get('frame_id', 'base_to_tool0'),
                     'position': np.array(data['position']),
                     'orientation': np.array(data['orientation'])
                 })
@@ -421,6 +427,7 @@ class HandEyeCalibrator(Node):
         
         data = {
             'timestamp': time.time(),
+            'robot_name': self.robot_name,
             'eye_in_hand': self.eye_in_hand,
             'num_detections': len(self.detections),
             'detections': detections_data
@@ -488,7 +495,7 @@ class HandEyeCalibrator(Node):
         
         world_effector_msg.header = Header()
         world_effector_msg.header.stamp = self.get_clock().now().to_msg()
-        world_effector_msg.header.frame_id = 'base_link'
+        world_effector_msg.header.frame_id = self.base_frame
         
         camera_object_msg.header = Header()
         camera_object_msg.header.stamp = self.get_clock().now().to_msg()
