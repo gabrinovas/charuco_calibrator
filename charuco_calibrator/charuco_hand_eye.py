@@ -32,11 +32,11 @@ class HandEyeCalibrator(Node):
         home_calib = os.path.expanduser('~/calibrations')
         
         # Parameters
-        self.declare_parameter('pictures_folder', os.path.join(home_calib, 'extrinsic_calibration/pictures'))
-        self.declare_parameter('robot_poses_folder', os.path.join(home_calib, 'extrinsic_calibration/robot_poses'))
-        self.declare_parameter('output_folder', os.path.join(home_calib, 'extrinsic_calibration/charuco_table_poses'))
+        self.declare_parameter('pictures_folder', '')
+        self.declare_parameter('robot_poses_folder', '')
+        self.declare_parameter('output_folder', '')
         self.declare_parameter('config_file', 'charuco_params.yaml')
-        self.declare_parameter('camera_intrinsics_file', os.path.join(home_calib, 'camera_intrinsics.yaml'))
+        self.declare_parameter('camera_intrinsics_file', 'latest')
         self.declare_parameter('eye_in_hand', False)
         self.declare_parameter('robot_name', 'ur5e')
         self.declare_parameter('base_frame', 'base')
@@ -44,11 +44,8 @@ class HandEyeCalibrator(Node):
         self.declare_parameter('save_results', True)  # Save results to file
         
         # Get parameters
-        self.pictures_folder = self.get_parameter('pictures_folder').value
-        self.robot_poses_folder = self.get_parameter('robot_poses_folder').value
-        self.output_folder = self.get_parameter('output_folder').value
         self.config_file = self.get_parameter('config_file').value
-        self.camera_intrinsics_file = self.get_parameter('camera_intrinsics_file').value
+        self.raw_camera_intrinsics_file = self.get_parameter('camera_intrinsics_file').value
         self.eye_in_hand = self.get_parameter('eye_in_hand').value
         self.robot_name = self.get_parameter('robot_name').value
         self.base_frame = self.get_parameter('base_frame').value
@@ -56,6 +53,20 @@ class HandEyeCalibrator(Node):
             self.base_frame = 'link_base'
         self.publish_rate = self.get_parameter('publish_rate').value
         self.save_results = self.get_parameter('save_results').value
+        
+        # Resolve robot folder and paths
+        robot_folder = 'ufactory_lite6' if 'lite6' in self.robot_name.lower() else self.robot_name.lower()
+        self.robot_calib_path = os.path.join(home_calib, robot_folder)
+        
+        pictures_p = self.get_parameter('pictures_folder').value
+        poses_p = self.get_parameter('robot_poses_folder').value
+        output_p = self.get_parameter('output_folder').value
+        
+        self.pictures_folder = pictures_p if pictures_p else os.path.join(self.robot_calib_path, 'extrinsic_calibration/pictures')
+        self.robot_poses_folder = poses_p if poses_p else os.path.join(self.robot_calib_path, 'extrinsic_calibration/robot_poses')
+        self.output_folder = output_p if output_p else os.path.join(self.robot_calib_path, 'extrinsic_calibration/charuco_table_poses')
+        
+        self.camera_intrinsics_file = self.resolve_camera_intrinsics_path(self.raw_camera_intrinsics_file)
         
         # Create output folder if it does not exist
         os.makedirs(self.output_folder, exist_ok=True)
@@ -95,6 +106,38 @@ class HandEyeCalibrator(Node):
         
         # Process images at startup
         self.process_images()
+
+    def resolve_camera_intrinsics_path(self, input_param):
+        """Resolves intrinsic calibration file by filename, timestamp or 'latest'"""
+        param_str = str(input_param or 'latest').strip()
+        intrinsic_folder = os.path.expanduser('~/calibrations/intrinsic_calibrations')
+        root_calib_folder = os.path.expanduser('~/calibrations')
+        
+        # Option A: 'latest' / 'default' / empty
+        if param_str.lower() in ['latest', 'default', '']:
+            files = glob.glob(os.path.join(intrinsic_folder, 'camera_intrinsics_*.yaml'))
+            if files:
+                files.sort(key=os.path.getmtime, reverse=True)
+                return files[0]
+            fallback = os.path.join(root_calib_folder, 'camera_intrinsics.yaml')
+            if os.path.exists(fallback):
+                return fallback
+            return param_str
+
+        # Option B: Direct existing path
+        if os.path.exists(param_str):
+            return param_str
+            
+        # Option C: Filename inside intrinsic_folder
+        in_folder = os.path.join(intrinsic_folder, param_str)
+        if os.path.exists(in_folder):
+            return in_folder
+            
+        in_root = os.path.join(root_calib_folder, param_str)
+        if os.path.exists(in_root):
+            return in_root
+            
+        return param_str
 
     def load_config(self):
         """Loads board configuration"""
@@ -458,12 +501,14 @@ class HandEyeCalibrator(Node):
         
         self.get_logger().info(f"💾 Calibration pairs saved in: {output_file}")
         
-        # Also save a copy in the location expected by compute_calib.py
+        # Also save in robot-specific path and top-level ~/calibrations/charuco_detections.yaml
+        robot_pairs_file = os.path.join(self.robot_calib_path, 'charuco_detections.yaml')
         global_pairs_file = os.path.expanduser('~/calibrations/charuco_detections.yaml')
         
         # Convert to format expected by offline_find_charuco.py
         simplified_data = {
             'timestamp': time.time(),
+            'robot_name': self.robot_name,
             'eye_in_hand': self.eye_in_hand,
             'num_pairs': len(self.calibration_pairs),
             'pairs': []
@@ -479,10 +524,13 @@ class HandEyeCalibrator(Node):
             }
             simplified_data['pairs'].append(simplified_pair)
         
+        with open(robot_pairs_file, 'w') as f:
+            yaml.dump(simplified_data, f, default_flow_style=False, sort_keys=False, indent=2)
+        
         with open(global_pairs_file, 'w') as f:
             yaml.dump(simplified_data, f, default_flow_style=False, sort_keys=False, indent=2)
         
-        self.get_logger().info(f"💾 Simplified data saved in: {global_pairs_file}")
+        self.get_logger().info(f"💾 Simplified detections saved in: {robot_pairs_file} and {global_pairs_file}")
 
     def timer_callback(self):
         """Publishes calibration pairs for VISP"""
