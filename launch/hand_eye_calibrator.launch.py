@@ -12,17 +12,17 @@ def generate_launch_description():
         # Arguments
         DeclareLaunchArgument(
             'pictures_folder',
-            default_value=os.path.join(home_dir, 'calibrations/extrinsic_calibration/pictures'),
+            default_value=os.path.join(home_dir, 'calibrations/realsense_d435i/extrinsic_calibration/ur5e/pictures'),
             description='Folder with images'
         ),
         DeclareLaunchArgument(
             'robot_poses_folder',
-            default_value=os.path.join(home_dir, 'calibrations/extrinsic_calibration/robot_poses'),
+            default_value=os.path.join(home_dir, 'calibrations/realsense_d435i/extrinsic_calibration/ur5e/robot_poses'),
             description='Folder with robot poses'
         ),
         DeclareLaunchArgument(
             'output_folder',
-            default_value=os.path.join(home_dir, 'calibrations/extrinsic_calib_charuco_poses'),
+            default_value=os.path.join(home_dir, 'calibrations/realsense_d435i/extrinsic_calibration/ur5e/charuco_table_poses'),
             description='Output folder'
         ),
         DeclareLaunchArgument(
@@ -34,7 +34,7 @@ def generate_launch_description():
         # Offline calibration node
         Node(
             package='charuco_calibrator',
-            executable='charuco_hand_eye_offline',
+            executable='charuco_hand_eye',
             name='charuco_offline_calibration',
             output='screen',
             parameters=[{

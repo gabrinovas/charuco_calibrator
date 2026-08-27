@@ -243,20 +243,34 @@ class HandEyeCalibrator(Node):
         
         dict_id = dictionary_map.get(self.dictionary_name, aruco.DICT_4X4_100)
         
-        self.aruco_dict = aruco.Dictionary_get(dict_id)
+        if hasattr(aruco, 'getPredefinedDictionary'):
+            self.aruco_dict = aruco.getPredefinedDictionary(dict_id)
+        else:
+            self.aruco_dict = aruco.Dictionary_get(dict_id)
         
         # Create CharucoBoard
-        self.board = aruco.CharucoBoard_create(
-            self.cols, self.rows,
-            self.square_length,
-            self.marker_length,
-            self.aruco_dict
-        )
+        if hasattr(aruco, 'CharucoBoard_create'):
+            self.board = aruco.CharucoBoard_create(
+                self.cols, self.rows,
+                self.square_length,
+                self.marker_length,
+                self.aruco_dict
+            )
+        else:
+            self.board = aruco.CharucoBoard(
+                (self.cols, self.rows),
+                self.square_length,
+                self.marker_length,
+                self.aruco_dict
+            )
         
         # Configure detector
-        self.detector_params = aruco.DetectorParameters_create()
+        if hasattr(aruco, 'DetectorParameters_create'):
+            self.detector_params = aruco.DetectorParameters_create()
+        else:
+            self.detector_params = aruco.DetectorParameters()
         
-        self.get_logger().info(f"✅ Charuco detector configured for OpenCV 4.5.4")
+        self.get_logger().info(f"✅ Charuco detector configured successfully")
 
     def load_robot_poses(self):
         """Loads robot poses from YAML files with the provided format"""
@@ -504,9 +518,8 @@ class HandEyeCalibrator(Node):
         
         self.get_logger().info(f"💾 Calibration pairs saved in: {output_file}")
         
-        # Also save in output folder (charuco_table_poses) and top-level ~/calibrations/charuco_detections.yaml
+        # Also save in output folder (charuco_table_poses)
         robot_pairs_file = os.path.join(self.output_folder, 'charuco_detections.yaml')
-        global_pairs_file = os.path.expanduser('~/calibrations/charuco_detections.yaml')
         
         # Convert to format expected by offline_find_charuco.py
         simplified_data = {
@@ -530,10 +543,7 @@ class HandEyeCalibrator(Node):
         with open(robot_pairs_file, 'w') as f:
             yaml.dump(simplified_data, f, default_flow_style=False, sort_keys=False, indent=2)
         
-        with open(global_pairs_file, 'w') as f:
-            yaml.dump(simplified_data, f, default_flow_style=False, sort_keys=False, indent=2)
-        
-        self.get_logger().info(f"💾 Simplified detections saved in: {robot_pairs_file} and {global_pairs_file}")
+        self.get_logger().info(f"💾 Simplified detections saved in: {robot_pairs_file}")
 
     def timer_callback(self):
         """Publishes calibration pairs for VISP"""

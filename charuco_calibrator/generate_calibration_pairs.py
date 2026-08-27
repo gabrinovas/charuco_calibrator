@@ -60,14 +60,25 @@ def main():
     }
     
     dict_id = dictionary_map.get(dictionary_name, aruco.DICT_4X4_100)
-    aruco_dict = aruco.getPredefinedDictionary(dict_id)
+    if hasattr(aruco, 'getPredefinedDictionary'):
+        aruco_dict = aruco.getPredefinedDictionary(dict_id)
+    else:
+        aruco_dict = aruco.Dictionary_get(dict_id)
     
-    board = aruco.CharucoBoard(
-        (cols, rows),
-        square_length,
-        marker_length,
-        aruco_dict
-    )
+    if hasattr(aruco, 'CharucoBoard_create'):
+        board = aruco.CharucoBoard_create(
+            cols, rows,
+            square_length,
+            marker_length,
+            aruco_dict
+        )
+    else:
+        board = aruco.CharucoBoard(
+            (cols, rows),
+            square_length,
+            marker_length,
+            aruco_dict
+        )
     
     # Load camera intrinsics (assuming they are in pictures_folder)
     intrinsics_file = os.path.join(PICTURES_FOLDER, 'calibration.yaml')
