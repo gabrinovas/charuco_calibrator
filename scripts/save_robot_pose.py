@@ -18,7 +18,7 @@ class RobotPoseSaver(Node):
         super().__init__('robot_pose_saver')
         
         self.declare_parameter('output_folder', os.path.expanduser('~/calibrations/extrinsic_calibration/robot_poses'))
-        self.declare_parameter('base_frame', 'base_link')
+        self.declare_parameter('base_frame', 'base')
         self.declare_parameter('tool_frame', 'tool0')
         
         self.output_folder = self.get_parameter('output_folder').value
