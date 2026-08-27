@@ -39,6 +39,7 @@ class HandEyeCalibrator(Node):
         self.declare_parameter('camera_intrinsics_file', 'latest')
         self.declare_parameter('eye_in_hand', False)
         self.declare_parameter('robot_name', 'ur5e')
+        self.declare_parameter('camera_name', 'realsense_d435i')
         self.declare_parameter('base_frame', 'base')
         self.declare_parameter('publish_rate', 1.0)  # Hz to publish
         self.declare_parameter('save_results', True)  # Save results to file
@@ -48,6 +49,7 @@ class HandEyeCalibrator(Node):
         self.raw_camera_intrinsics_file = self.get_parameter('camera_intrinsics_file').value
         self.eye_in_hand = self.get_parameter('eye_in_hand').value
         self.robot_name = self.get_parameter('robot_name').value
+        self.camera_name = self.get_parameter('camera_name').value
         self.base_frame = self.get_parameter('base_frame').value
         if 'lite6' in self.robot_name.lower() and self.base_frame == 'base':
             self.base_frame = 'link_base'
@@ -56,15 +58,15 @@ class HandEyeCalibrator(Node):
         
         # Resolve robot folder and paths
         robot_folder = 'ufactory_lite6' if 'lite6' in self.robot_name.lower() else self.robot_name.lower()
-        self.robot_calib_path = os.path.join(home_calib, robot_folder)
+        self.robot_calib_path = os.path.join(home_calib, self.camera_name, 'extrinsic_calibration', robot_folder)
         
         pictures_p = self.get_parameter('pictures_folder').value
         poses_p = self.get_parameter('robot_poses_folder').value
         output_p = self.get_parameter('output_folder').value
         
-        self.pictures_folder = pictures_p if pictures_p else os.path.join(self.robot_calib_path, 'extrinsic_calibration/pictures')
-        self.robot_poses_folder = poses_p if poses_p else os.path.join(self.robot_calib_path, 'extrinsic_calibration/robot_poses')
-        self.output_folder = output_p if output_p else os.path.join(self.robot_calib_path, 'extrinsic_calibration/charuco_table_poses')
+        self.pictures_folder = pictures_p if pictures_p else os.path.join(self.robot_calib_path, 'pictures')
+        self.robot_poses_folder = poses_p if poses_p else os.path.join(self.robot_calib_path, 'robot_poses')
+        self.output_folder = output_p if output_p else os.path.join(self.robot_calib_path, 'charuco_table_poses')
         
         self.camera_intrinsics_file = self.resolve_camera_intrinsics_path(self.raw_camera_intrinsics_file)
         
@@ -110,8 +112,9 @@ class HandEyeCalibrator(Node):
     def resolve_camera_intrinsics_path(self, input_param):
         """Resolves intrinsic calibration file by filename, timestamp or 'latest'"""
         param_str = str(input_param or 'latest').strip()
-        intrinsic_folder = os.path.expanduser('~/calibrations/intrinsic_calibrations')
-        root_calib_folder = os.path.expanduser('~/calibrations')
+        camera_calib_folder = os.path.join(os.path.expanduser('~/calibrations'), self.camera_name)
+        intrinsic_folder = os.path.join(camera_calib_folder, 'intrinsic_calibrations')
+        root_calib_folder = camera_calib_folder
         
         # Option A: 'latest' / 'default' / empty
         if param_str.lower() in ['latest', 'default', '']:
