@@ -504,8 +504,8 @@ class HandEyeCalibrator(Node):
         
         self.get_logger().info(f"💾 Calibration pairs saved in: {output_file}")
         
-        # Also save in robot-specific path and top-level ~/calibrations/charuco_detections.yaml
-        robot_pairs_file = os.path.join(self.robot_calib_path, 'charuco_detections.yaml')
+        # Also save in output folder (charuco_table_poses) and top-level ~/calibrations/charuco_detections.yaml
+        robot_pairs_file = os.path.join(self.output_folder, 'charuco_detections.yaml')
         global_pairs_file = os.path.expanduser('~/calibrations/charuco_detections.yaml')
         
         # Convert to format expected by offline_find_charuco.py
